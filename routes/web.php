@@ -830,3 +830,23 @@ Route::middleware(['auth'])->group(function () {
     });
 
 });
+
+// TEMPORARY – create/reset admin account (delete after first use)
+Route::get('/create-admin', function () {
+    $user = \App\Models\SystemUser::find(1);
+    if ($user) {
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make('admin@paterostechnologicalcollege.edu.ph')
+        ]);
+        return 'Admin password updated. You can now log in.';
+    }
+    \App\Models\SystemUser::create([
+        'full_name'           => 'MIS Administrator',
+        'personal_email'      => 'admin@example.com',
+        'institutional_email' => 'admin@paterostechnologicalcollege.edu.ph',
+        'password'            => \Illuminate\Support\Facades\Hash::make('admin@paterostechnologicalcollege.edu.ph'),
+        'role'                => 'mis',
+        'is_active'           => true,
+    ]);
+    return 'Admin account created.';
+});
