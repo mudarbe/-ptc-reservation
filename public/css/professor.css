@@ -1170,3 +1170,95 @@ body::before {
     }
 }
 
+/* Responsive profile stacking */
+@media (max-width: 600px) {
+    .profile-cards {
+        flex-direction: column !important;
+    }
+    .profile-cards .card {
+        min-width: 0 !important;   /* allow cards to shrink */
+        flex: 1 1 auto;
+        width: 100%;
+    }
+    .field-value {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        font-size: 1rem;           /* slightly smaller on mobile */
+    }
+    .profile-picture {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-cards {
+        flex-direction: column !important;
+    }
+    .profile-cards .card {
+        min-width: 0 !important;
+        flex: 1 1 auto;
+        width: 100%;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+    .field-value {
+        flex-wrap: wrap;
+        font-size: 0.95rem !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+    .field-value span {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+    .profile-picture {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* Responsive tab navigation */
+@media (max-width: 600px) {
+    .tab-nav {
+        padding: 0 0.5rem;
+    }
+    .tab-nav nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+    }
+    .tab-btn {
+        padding: 0.7rem 1rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-overlay {
+        align-items: flex-start;
+        padding-top: 160px;          /* push modal below the header and tabs */
+    }
+    .modal-box {
+        margin: 0 auto 2rem auto;    /* remove any large top margin, let padding-top handle it */
+        max-height: calc(100vh - 200px) !important;  /* keep within visible area */
+    }
+}
+
+/* Force all popup modals below the header on mobile */
+@media (max-width: 600px) {
+    .modal-overlay {
+        align-items: flex-start !important;
+        padding-top: 150px !important;   /* clears the header + tabs */
+        box-sizing: border-box;
+    }
+    .modal-overlay .modal-box {
+        margin: 0 auto 2rem auto !important;
+        max-height: calc(100vh - 200px) !important;
+        overflow-y: auto !important;
+    }
+}

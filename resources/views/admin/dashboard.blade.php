@@ -134,7 +134,7 @@
                 <a href="{{ route('admin.reservations.pending') }}" class="btn btn-warning">View Pending Reservations</a>
             </div>
 
-            <!-- Activity Logs -->
+                        <!-- Activity Logs -->
             @php
                 $activityLogs = \App\Models\ActivityLog::with('user')
                     ->orderBy('created_at', 'desc')
@@ -143,7 +143,7 @@
             @endphp
 
             @if($activityLogs->count() > 0)
-                <div class="table-wrapper" style="margin-top:2rem;">
+                <div class="table-wrapper" style="margin-top:2rem;" x-data="{ expanded: false }">
                     <h3>📋 Activity Logs</h3>
                     <table class="data-table">
                         <thead>
@@ -155,8 +155,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($activityLogs as $log)
-                            <tr>
+                            @foreach($activityLogs as $index => $log)
+                            <tr style="{{ $index >= 3 ? 'display: none;' : '' }}"
+                                :style="{{ $index >= 3 ? 'expanded ? \'display: table-row;\' : \'display: none;\'' : '' }}">
                                 <td>{{ $log->user ? $log->user->full_name : 'System' }}</td>
                                 <td>
                                     <span class="badge 
@@ -164,6 +165,7 @@
                                         @elseif(in_array($log->action, ['declined','cancelled'])) badge-declined
                                         @elseif($log->action == 'checked_in') badge-ongoing
                                         @elseif($log->action == 'blocked') badge-expired
+                                        @elseif($log->action == 'reminder_sent') badge-pending
                                         @else badge-pending
                                         @endif">
                                         {{ ucfirst($log->action) }}
@@ -175,6 +177,14 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                    @if($activityLogs->count() > 3)
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <button class="btn btn-outline-filter" @click="expanded = !expanded">
+                                <span x-text="expanded ? '▲ Less' : '▼ More'"></span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             @endif
 
