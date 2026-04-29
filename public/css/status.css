@@ -1,0 +1,155 @@
+/* Reuse the same font & background as login */
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Jost', 'Futura', 'Trebuchet MS', Arial, sans-serif;
+    background: url('../images/ptcfront.png') center/cover no-repeat fixed;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 100, 0, 0.4);
+    z-index: 0;
+}
+
+/* Centered card */
+.card {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 3rem 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+}
+
+.card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.card p.subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+
+/* Form */
+.input-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.3rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f8fafc;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: #fff;
+}
+
+/* Buttons */
+.btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    background: #2563eb;
+    color: #fff;
+    margin-top: 0.5rem;
+}
+
+.btn:hover {
+    background: #1d4ed8;
+}
+
+/* Status result boxes */
+.result-box {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.result-box.pending {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    color: #854d0e;
+}
+
+.result-box.approved {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.result-box.rejected {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+.result-box.not-found {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+/* Back link */
+.back-link {
+    margin-top: 1.5rem;
+    display: block;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
