@@ -831,3 +831,11 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+// TEMPORARY – manual status update trigger (protected with a simple token)
+Route::get('/update-statuses', function () {
+    if (request('token') !== 'ptc2026reservation') {
+        abort(403);
+    }
+    \Artisan::call('reservations:update-statuses');
+    return 'Statuses updated.';
+});
