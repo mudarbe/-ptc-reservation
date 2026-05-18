@@ -10,15 +10,19 @@
 </head>
 <body x-data="{
     detailModal: false,
-    detailItem: null
+    detailItem: null,
+    searchEmail: ''
 }">
 
     <!-- Sidebar (same as before) -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}" class="active">Account Requests</a>
@@ -52,6 +56,30 @@
             @endif
 
             <!-- Table -->
+
+            <div class="archive-filter-bar">
+
+    <div class="archive-filter-left">
+
+        <label>Search Institutional Email</label>
+
+        <input type="text"
+               x-model="searchEmail"
+               placeholder="example@paterostechnologicalcollege.edu.ph"
+               class="archive-date-filter">
+
+    </div>
+
+    <button x-show="searchEmail"
+            @click="searchEmail = ''"
+            class="archive-clear-btn">
+
+        Clear
+
+    </button>
+
+</div>
+
             <div class="table-wrapper">
                 <h3>Pending Account Requests</h3>
                 @if($requests->count() > 0)
@@ -59,7 +87,7 @@
                         <thead>
                             <tr>
                                 <th>Full Name</th>
-                                <th>Personal Email</th>
+                                
                                 <th>Institutional Email</th>
                                 <th>Requested At</th>
                                 <th>Actions</th>
@@ -67,16 +95,24 @@
                         </thead>
                         <tbody>
                             @foreach($requests as $request)
-                            <tr class="clickable-row"
+
+<tr id="request-{{ $request->id }}"
+
+    x-show="
+        !searchEmail ||
+        '{{ strtolower($request->institutional_email) }}'
+            .includes(searchEmail.toLowerCase())
+    "
+    class="clickable-row {{ request('highlight') == $request->id ? 'highlight-row' : '' }}"
                                 @click="detailItem = {{ json_encode([
                                     'name' => $request->full_name,
-                                    'personal' => $request->personal_email,
+                                    
                                     'institutional' => $request->institutional_email,
                                     'date' => $request->created_at->format('M d, Y H:i'),
                                     'status' => ucfirst($request->status),
                                 ]) }}; detailModal = true">
                                 <td>{{ $request->full_name }}</td>
-                                <td>{{ $request->personal_email }}</td>
+                                
                                 <td>{{ $request->institutional_email }}</td>
                                 <td>{{ $request->created_at->format('M d, Y H:i') }}</td>
                                 <td @click.stop="">
@@ -110,19 +146,93 @@
                 <button @click="detailModal = false" class="modal-close">&times;</button>
             </div>
             <template x-if="detailItem">
-                <div>
-                    <p><strong>Full Name:</strong> <span x-text="detailItem.name"></span></p>
-                    <p><strong>Personal Email:</strong> <span x-text="detailItem.personal"></span></p>
-                    <p><strong>Institutional Email:</strong> <span x-text="detailItem.institutional"></span></p>
-                    <p><strong>Requested At:</strong> <span x-text="detailItem.date"></span></p>
-                    <p><strong>Status:</strong> <span x-text="detailItem.status"></span></p>
+
+    <div class="account-detail-modern">
+
+        <!-- TOP PROFILE -->
+
+        <div class="account-detail-top">
+
+            <div class="account-avatar">
+
+                <span x-text="detailItem.name.charAt(0).toUpperCase()"></span>
+
+            </div>
+
+            <div>
+
+                <h2 x-text="detailItem.name"></h2>
+
+                <p>
+                    Professor Account Request
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- DETAILS GRID -->
+
+        <div class="account-detail-grid">
+
+            <div class="account-detail-item">
+
+                <span>Institutional Email</span>
+
+                <strong x-text="detailItem.institutional"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Requested At</span>
+
+                <strong x-text="detailItem.date"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Status</span>
+
+                <div class="account-status-pill">
+
+                    <span x-text="detailItem.status"></span>
+
                 </div>
-            </template>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
             <div class="modal-actions" style="margin-top: 1.5rem;">
                 <button @click="detailModal = false" class="btn btn-outline">Close</button>
             </div>
         </div>
     </div>
+
+    <script>
+
+window.addEventListener('load', () => {
+
+    const highlighted =
+        document.querySelector('.highlight-row');
+
+    if(highlighted){
+
+        highlighted.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>

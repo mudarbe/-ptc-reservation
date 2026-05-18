@@ -27,10 +27,13 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>

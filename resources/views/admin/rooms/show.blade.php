@@ -95,10 +95,13 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>
@@ -198,68 +201,241 @@
                 $now = now()->setTimezone('Asia/Manila');
             @endphp
 
-            <div class="calendar-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            @foreach($timeSlots as $slot)
-                                <th>{{ $slot }}</th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for($date = $startDate->copy(); $date->lte($endDate); $date->addDay())
-                            @php $dateStr = $date->toDateString(); @endphp
-                            <tr>
-                                <td>
-                                    {{ $date->format('M d') }}
-                                    @if($date->isToday()) <span style="color:var(--color-primary); font-weight:600;">(Today)</span> @endif
-                                </td>
-                                @foreach($timeSlots as $slot)
-                                    @php
-                                        $res = $reservations[$dateStr][$slot] ?? null;
-                                        $block = $blockedSlots[$dateStr][$slot] ?? null;
+            <div class="room-calendar-modern">
 
-                                        // Determine if the slot is already over
-                                        $slotEndTime = parseSlotEndTime($slot);
-                                        list($eh, $em) = explode(':', $slotEndTime);
-                                        $slotEndCarbon = \Carbon\Carbon::parse($dateStr, 'Asia/Manila')->setTime($eh, $em, 0);
-                                        $isPast = $now->greaterThanOrEqualTo($slotEndCarbon);
-                                    @endphp
-                                    <td>
-                                        @if($block)
-                                            <div class="cell-block">
-                                                <div style="font-weight:600;">{{ ucfirst(str_replace('_', ' ', $block->type)) }}</div>
-                                                @if($block->notes)
-                                                    <div style="font-size:0.7rem; color:#475569;">{{ $block->notes }}</div>
-                                                @endif
-                                            </div>
-                                        @elseif($res)
-                                            <div class="cell-reservation">
-                                                <div class="prof-name">{{ $res->user->full_name }}</div>
-                                                <div class="prof-activity">{{ $res->activity_name }}</div>
-                                                <div class="prof-pax">({{ $res->pax }} pax)</div>
-                                                <span class="badge badge-approved">{{ ucfirst($res->status) }}</span>
-                                            </div>
-                                        @else
-                                            @if($isPast)
-                                                <span class="cell-empty" style="font-weight:500; color:#94a3b8;">Past</span>
-                                            @else
-                                                <button 
-                                                    @click="blockModal = true; selectedDate = '{{ $dateStr }}'; selectedSlot = '{{ $slot }}'; updateAvailableSlots()"
-                                                    class="block-link">
-                                                    Block
-                                                </button>
-                                            @endif
-                                        @endif
-                                    </td>
-                                @endforeach
-                            </tr>
-                        @endfor
-                    </tbody>
-                </table>
+@for($date = $startDate->copy(); $date->lte($endDate); $date->addDay())
+
+@php
+
+    $dateStr = $date->toDateString();
+
+@endphp
+
+<div class="calendar-day-card">
+
+    <!-- DATE HEADER -->
+
+    <div class="calendar-day-header">
+
+        <div>
+
+            <h3>
+                {{ $date->format('F d, Y') }}
+            </h3>
+
+            @if($date->isToday())
+
+                <span class="today-pill">
+                    TODAY
+                </span>
+
+            @endif
+
+        </div>
+
+    </div>
+
+    <!-- SLOTS -->
+
+    <div class="calendar-slot-list">
+
+        @foreach($timeSlots as $slot)
+
+        @php
+
+            $res = $reservations[$dateStr][$slot] ?? null;
+
+            $block = $blockedSlots[$dateStr][$slot] ?? null;
+
+            $slotEndTime = parseSlotEndTime($slot);
+
+            list($eh, $em) = explode(':', $slotEndTime);
+
+            $slotEndCarbon = \Carbon\Carbon::parse($dateStr, 'Asia/Manila')
+                ->setTime($eh, $em, 0);
+
+            $isPast = $now->greaterThanOrEqualTo($slotEndCarbon);
+
+        @endphp
+
+        <div class="modern-slot-card">
+
+            <!-- SLOT HEADER -->
+
+            <div class="slot-top">
+
+                <div class="slot-time">
+                    {{ $slot }}
+                </div>
+
+                @if($block)
+
+                    <span class="slot-badge blocked">
+                        Blocked
+                    </span>
+
+                @elseif($res)
+
+                    <span class="slot-badge active">
+                        {{ ucfirst($res->status) }}
+                    </span>
+
+                @else
+
+                    <span class="slot-badge empty">
+                        Empty
+                    </span>
+
+                @endif
+
             </div>
+
+            <!-- BLOCKED -->
+
+            @if($block)
+
+                <div class="slot-blocked-box">
+
+                    <strong>
+                        {{ ucfirst(str_replace('_', ' ', $block->type)) }}
+                    </strong>
+
+                    @if($block->notes)
+
+                        <p>
+                            {{ $block->notes }}
+                        </p>
+
+                    @endif
+
+                </div>
+
+            <!-- RESERVATION -->
+
+            @elseif($res)
+
+                <div class="slot-reservation-box">
+
+                    <div class="slot-professor">
+                        {{ $res->user->full_name }}
+                    </div>
+
+                    <div class="slot-activity">
+                        {{ $res->activity_name }}
+                    </div>
+
+                    <div class="slot-details">
+
+                        <span>
+                            👥 {{ $res->pax }} pax
+                        </span>
+
+                        <span>
+                            📍 {{ $room->name }}
+                        </span>
+
+                    </div>
+
+                    @if($res->status === 'ongoing')
+
+                    @php
+
+                        $ongoingEnd = \Carbon\Carbon::parse(
+                            $res->reservation_date->toDateString().' '.parseSlotEndTime($res->time_slot),
+                            'Asia/Manila'
+                        );
+
+                    @endphp
+
+                    <div class="ongoing-timer-mini"
+                         x-data="{ remaining: '' }"
+                         x-init="
+
+                            const endTime = new Date('{{ $ongoingEnd->toDateTimeString() }}').getTime();
+
+                            const update = () => {
+
+                                const now = new Date().getTime();
+
+                                const diff = endTime - now;
+
+                                if(diff <= 0){
+
+                                    remaining = 'Done';
+
+                                    return;
+                                }
+
+                                const h = Math.floor(diff / 3600000);
+
+                                const m = Math.floor((diff % 3600000) / 60000);
+
+                                const s = Math.floor((diff % 60000) / 1000);
+
+                                remaining =
+                                    h + ':' +
+                                    m.toString().padStart(2,'0') + ':' +
+                                    s.toString().padStart(2,'0');
+
+                            };
+
+                            update();
+
+                            setInterval(update, 1000);
+
+                         ">
+
+                        ⏳ Remaining:
+                        <strong x-text="remaining"></strong>
+
+                    </div>
+
+                    @endif
+
+                </div>
+
+            <!-- EMPTY -->
+
+            @else
+
+                @if($isPast)
+
+                    <div class="slot-past">
+
+                        Past Slot
+
+                    </div>
+
+                @else
+
+                    <button
+                        @click="
+                            blockModal = true;
+                            selectedDate = '{{ $dateStr }}';
+                            selectedSlot = '{{ $slot }}';
+                            updateAvailableSlots()
+                        "
+                        class="modern-block-btn">
+
+                        Block This Slot
+
+                    </button>
+
+                @endif
+
+            @endif
+
+        </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+
+@endfor
+
+</div>
 
                         <!-- Block Modal -->
             <div x-show="blockModal" class="modal-overlay" style="display:none;" @click.self="blockModal = false">

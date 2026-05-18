@@ -14,15 +14,19 @@
     declineModal: false,
     selectedDeclineRes: null,
     declineReasonType: 'schedule_conflict',
-    declineReasonNotes: ''
+    declineReasonNotes: '',
+selectedDate: ''
 }">
 
     <!-- Sidebar (unchanged) -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>
@@ -55,6 +59,28 @@
                 <div class="alert alert-error">{{ session('error') }}</div>
             @endif
 
+            <div class="archive-filter-bar">
+
+    <div class="archive-filter-left">
+
+        <label>Filter by Reservation Date</label>
+
+        <input type="date"
+               x-model="selectedDate"
+               class="archive-date-filter">
+
+    </div>
+
+    <button x-show="selectedDate"
+            @click="selectedDate = ''"
+            class="archive-clear-btn">
+
+        Clear
+
+    </button>
+
+</div>
+
             <!-- Table -->
             @if($reservations->count() > 0)
                 <div class="table-wrapper">
@@ -73,7 +99,14 @@
                         </thead>
                         <tbody>
                             @foreach($reservations as $res)
-                            <tr class="clickable-row"
+
+<tr id="reservation-{{ $res->id }}"
+
+    x-show="
+        !selectedDate ||
+        selectedDate === '{{ $res->reservation_date->format('Y-m-d') }}'
+    "
+    class="clickable-row {{ request('highlight') == $res->id ? 'highlight-row' : '' }}"
                                 @click="detailItem = {{ json_encode([
                                     'professor' => $res->user->full_name,
                                     'room' => $res->room->name,
@@ -133,17 +166,100 @@
                 <button @click="detailModal = false" class="modal-close">&times;</button>
             </div>
             <template x-if="detailItem">
-                <div>
-                    <p><strong>Professor:</strong> <span x-text="detailItem.professor"></span></p>
-                    <p><strong>Room:</strong> <span x-text="detailItem.room"></span></p>
-                    <p><strong>Date:</strong> <span x-text="detailItem.date"></span></p>
-                    <p><strong>Time Slot:</strong> <span x-text="detailItem.time_slot"></span></p>
-                    <p><strong>Activity:</strong> <span x-text="detailItem.activity"></span></p>
-                    <p><strong>Pax:</strong> <span x-text="detailItem.pax"></span></p>
-                    <p><strong>Hold Expires:</strong> <span x-text="detailItem.hold"></span></p>
-                    <p><strong>Status:</strong> <span x-text="detailItem.status"></span></p>
+
+    <div class="account-detail-modern">
+
+        <!-- TOP -->
+
+        <div class="account-detail-top">
+
+            <div class="account-avatar">
+
+                <span x-text="detailItem.professor.charAt(0).toUpperCase()"></span>
+
+            </div>
+
+            <div>
+
+                <h2 x-text="detailItem.professor"></h2>
+
+                <p>
+                    Reservation Request
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- DETAILS -->
+
+        <div class="account-detail-grid">
+
+            <div class="account-detail-item">
+
+                <span>Room</span>
+
+                <strong x-text="detailItem.room"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Date</span>
+
+                <strong x-text="detailItem.date"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Time Slot</span>
+
+                <strong x-text="detailItem.time_slot"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Activity</span>
+
+                <strong x-text="detailItem.activity"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Pax</span>
+
+                <strong x-text="detailItem.pax"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Hold Expires</span>
+
+                <strong x-text="detailItem.hold"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Status</span>
+
+                <div class="account-status-pill">
+
+                    <span x-text="detailItem.status"></span>
+
                 </div>
-            </template>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
             <div class="modal-actions" style="margin-top: 1.5rem;">
                 <button @click="detailModal = false" class="btn btn-outline">Close</button>
             </div>
@@ -175,6 +291,26 @@
             </form>
         </div>
     </div>
+
+    <script>
+
+window.addEventListener('load', () => {
+
+    const highlighted =
+        document.querySelector('.highlight-row');
+
+    if(highlighted){
+
+        highlighted.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>

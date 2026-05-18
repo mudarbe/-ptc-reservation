@@ -9,6 +9,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body x-data="{
+    selectedDate: '',
     cancelModal: false,
     selectedRes: null,
     reasonType: 'schedule_conflict',
@@ -21,10 +22,13 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>
@@ -50,6 +54,27 @@
         </header>
 
         <div class="content">
+            <div class="archive-filter-bar">
+
+    <div class="archive-filter-left">
+
+        <label>Filter by Date</label>
+
+        <input type="date"
+               x-model="selectedDate"
+               class="archive-date-filter">
+
+    </div>
+
+    <button class="archive-clear-btn"
+            x-show="selectedDate"
+            @click="selectedDate = ''">
+
+        Clear
+
+    </button>
+
+</div>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -93,21 +118,18 @@
             @if(isset($reservations) && $reservations->count() > 0)
                 <div class="table-wrapper">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Professor</th>
-                                <th>Room</th>
-                                <th>Date</th>
-                                <th>Time Slot</th>
-                                <th>Activity</th>
-                                <th>Pax</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+                        
                         <tbody>
                             @foreach($reservations as $res)
-                            <tr class="clickable-row"
+
+<tr
+    x-show="
+        !selectedDate ||
+        selectedDate === '{{ $res->reservation_date->format('Y-m-d') }}'
+    "
+
+<tr id="reservation-{{ $res->id }}"
+    class="clickable-row {{ request('highlight') == $res->id ? 'highlight-row' : '' }}"
                                 @click="detailRes = {{ json_encode([
                                     'professor' => $res->user->full_name,
                                     'room' => $res->room->name,
@@ -186,21 +208,117 @@
                 <button @click="detailModal = false" class="modal-close">&times;</button>
             </div>
             <template x-if="detailRes">
-                <div>
-                    <p><strong>Professor:</strong> <span x-text="detailRes.professor"></span></p>
-                    <p><strong>Room:</strong> <span x-text="detailRes.room"></span></p>
-                    <p><strong>Date:</strong> <span x-text="detailRes.date"></span></p>
-                    <p><strong>Time Slot:</strong> <span x-text="detailRes.time_slot"></span></p>
-                    <p><strong>Activity:</strong> <span x-text="detailRes.activity"></span></p>
-                    <p><strong>Pax:</strong> <span x-text="detailRes.pax"></span></p>
-                    <p><strong>Status:</strong> <span x-text="detailRes.status"></span></p>
+
+    <div class="account-detail-modern">
+
+        <!-- TOP -->
+
+        <div class="account-detail-top">
+
+            <div class="account-avatar">
+
+                <span x-text="detailRes.professor.charAt(0).toUpperCase()"></span>
+
+            </div>
+
+            <div>
+
+                <h2 x-text="detailRes.professor"></h2>
+
+                <p>
+                    Active Reservation
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- DETAILS -->
+
+        <div class="account-detail-grid">
+
+            <div class="account-detail-item">
+
+                <span>Room</span>
+
+                <strong x-text="detailRes.room"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Date</span>
+
+                <strong x-text="detailRes.date"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Time Slot</span>
+
+                <strong x-text="detailRes.time_slot"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Activity</span>
+
+                <strong x-text="detailRes.activity"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Pax</span>
+
+                <strong x-text="detailRes.pax"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Status</span>
+
+                <div class="account-status-pill">
+
+                    <span x-text="detailRes.status"></span>
+
                 </div>
-            </template>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
             <div class="modal-actions" style="margin-top: 1.5rem;">
                 <button @click="detailModal = false" class="btn btn-outline">Close</button>
             </div>
         </div>
     </div>
+
+    <script>
+
+window.addEventListener('load', () => {
+
+    const highlighted =
+        document.querySelector('.highlight-row');
+
+    if(highlighted){
+
+        highlighted.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>

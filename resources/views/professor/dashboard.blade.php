@@ -38,6 +38,8 @@
         </nav>
     </div>
 
+     
+
     <!-- Content -->
     <main class="professor-content">
 
@@ -88,19 +90,327 @@
                 <button @click="activeTab = 'reservations'" class="btn btn-primary">View My Reservations</button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card purple clickable-stat" @click="activeTab = 'reservations'; window.reservationFilter = 'all';">
-                    <h3>Total Reservations</h3>
-                    <p class="stat-number">{{ Auth::user()->reservations()->count() }}</p>
+
+    <!-- TOTAL -->
+
+    <div class="stat-card purple clickable-stat stat-modern"
+         @click="activeTab = 'reservations'; window.reservationFilter = 'all';">
+
+        <div class="stat-top">
+
+            <div class="stat-icon total-icon">
+
+    <svg width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+
+        <rect x="4"
+              y="5"
+              width="16"
+              height="15"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="2"/>
+
+        <path d="M8 3V7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"/>
+
+        <path d="M16 3V7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"/>
+
+        <path d="M4 10H20"
+              stroke="currentColor"
+              stroke-width="2"/>
+
+    </svg>
+
+</div>
+
+            <div class="stat-wave"></div>
+
+        </div>
+
+        <h3>Total Reservations</h3>
+
+        <p class="stat-number">
+            {{ Auth::user()->reservations()->count() }}
+        </p>
+
+    </div>
+
+    <!-- PENDING -->
+
+    <div class="stat-card yellow clickable-stat stat-modern"
+         @click="statsModal = true; statsReservations = pendingRes; statsTitle = 'Pending Reservations'">
+
+        <div class="stat-top">
+
+            <div class="stat-icon pending-icon">
+
+    <svg width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+
+        <circle cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                stroke-width="2.2"/>
+
+        <path d="M12 7V12L15 14"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+
+    </svg>
+
+</div>
+
+            <div class="stat-wave"></div>
+
+        </div>
+
+        <h3>Pending</h3>
+
+        <p class="stat-number">
+            {{ Auth::user()->reservations()->where('status', 'pending')->count() }}
+        </p>
+
+    </div>
+
+    <!-- APPROVED -->
+
+    <div class="stat-card green clickable-stat stat-modern"
+         @click="statsModal = true; statsReservations = approvedOngoingRes; statsTitle = 'Approved / Ongoing'">
+
+        <div class="stat-top">
+
+            <div class="stat-icon approved-icon">
+
+    <svg width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+
+        <circle cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                stroke-width="2.2"/>
+
+        <path d="M8 12.5L10.8 15L16 9"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+
+    </svg>
+
+</div>
+
+            <div class="stat-wave"></div>
+
+        </div>
+
+        <h3>Approved / Ongoing</h3>
+
+        <p class="stat-number">
+            {{ Auth::user()->reservations()->whereIn('status', ['approved','ongoing'])->count() }}
+        </p>
+
+    </div>
+
+</div>
+
+                                    @php
+                $lastRes = Auth::user()->reservations()->latest()->first();
+            @endphp
+
+                                       <!-- Reservation History (collapsible) -->
+            @php
+                $dashHistoryReservations = Auth::user()->reservations()
+                    ->where('status', '!=', 'expired')
+                    ->with('room')
+                    ->orderBy('reservation_date', 'desc')
+                    ->get();
+            @endphp
+
+            @if ($dashHistoryReservations->count() > 0)
+                <div class="dash-history" x-data="{ expanded: false }">
+                    <h4>Reservation History</h4>
+                    <div class="dash-history-list">
+                        @foreach ($dashHistoryReservations as $index => $res)
+                            <div class="dash-history-item" style="{{ $index > 0 ? 'display: none;' : '' }}"
+                                 :style="{{ $index > 0 ? 'expanded ? \'display: flex;\' : \'display: none;\'' : '' }}">
+                                <span class="badge badge-{{ $res->status }}">{{ ucfirst($res->status) }}</span>
+                                <span class="dash-history-room">{{ $res->room->name }}</span>
+                                <span class="dash-history-date">{{ $res->reservation_date->format('M d, Y') }}</span>
+                                <span class="dash-history-slot">{{ $res->time_slot }}</span>
+                                <span class="dash-history-activity">{{ $res->activity_name }}</span>
+                                <span class="dash-history-pax">({{ $res->pax }} pax)</span>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($dashHistoryReservations->count() > 1)
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <button class="btn btn-outline btn-sm" @click="expanded = !expanded">
+                                <span x-text="expanded ? '▲ Less' : '▼ More'"></span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
-                <div class="stat-card yellow clickable-stat" @click="statsModal = true; statsReservations = pendingRes; statsTitle = 'Pending Reservations'">
-                    <h3>Pending</h3>
-                    <p class="stat-number">{{ Auth::user()->reservations()->where('status', 'pending')->count() }}</p>
+            @endif
+
+            <!-- Dashboard Reservation Calendar -->
+<div class="dashboard-calendar-card">
+
+    <div class="dashboard-calendar-header">
+        <div>
+            <h2>Reservation Calendar</h2>
+            <p>View all your submitted reservations and statuses.</p>
+        </div>
+
+        <div class="calendar-month-label">
+            {{ now()->format('F Y') }}
+        </div>
+    </div>
+
+    @php
+        $currentMonth = now();
+
+        $startOfMonth = $currentMonth->copy()->startOfMonth();
+        $endOfMonth = $currentMonth->copy()->endOfMonth();
+
+        $startDay = $startOfMonth->copy()->startOfWeek(Carbon\Carbon::SUNDAY);
+        $endDay = $endOfMonth->copy()->endOfWeek(Carbon\Carbon::SATURDAY);
+
+        $calendarDays = [];
+
+        $date = $startDay->copy();
+
+        while ($date <= $endDay) {
+            $calendarDays[] = $date->copy();
+            $date->addDay();
+        }
+
+        $dashboardCalendarReservations = Auth::user()->reservations()
+            ->where('status', '!=', 'expired')
+            ->with('room')
+            ->get()
+            ->groupBy(fn($r) => $r->reservation_date->toDateString());
+    @endphp
+
+    <div class="dashboard-calendar-grid">
+
+        <div class="dashboard-day-name">Sun</div>
+        <div class="dashboard-day-name">Mon</div>
+        <div class="dashboard-day-name">Tue</div>
+        <div class="dashboard-day-name">Wed</div>
+        <div class="dashboard-day-name">Thu</div>
+        <div class="dashboard-day-name">Fri</div>
+        <div class="dashboard-day-name">Sat</div>
+
+        @foreach($calendarDays as $day)
+
+            @php
+    $formattedDate = $day->toDateString();
+
+    $isPastDate = $day->lt(now()->startOfDay());
+
+    $isSunday = $day->dayOfWeek === Carbon\Carbon::SUNDAY;
+
+    $isDisabled = $isPastDate || $isSunday;
+
+    $dayReservations = $dashboardCalendarReservations->get($formattedDate, collect());
+
+    $isCurrentMonth = $day->month === $currentMonth->month;
+
+    $isToday = $day->isToday();
+@endphp
+
+<div class="dashboard-calendar-day
+    {{ !$isCurrentMonth ? 'other-month' : '' }}
+    {{ $isToday ? 'today' : '' }}
+    {{ $isDisabled ? 'disabled-day' : '' }}"
+
+    @if(!$isDisabled)
+    @click="
+        selectedDate = '{{ $formattedDate }}';
+        showModal = true;
+        step = 2;
+        roomTypeSelected = false;
+        selectedRoom = null;
+        selectedTimeSlot = '';
+        expandedRoom = null;
+        loadRooms();
+
+        reservationsForSelectedDate = {{ json_encode(
+            $dayReservations->map(function($r) {
+                return [
+    'id' => $r->id,
+    'room' => $r->room->name,
+    'slot' => $r->time_slot,
+    'status' => ucfirst($r->status),
+    'activity' => $r->activity_name,
+];
+            })->values()
+        ) }};
+    "
+    @endif
+>
+
+    <div class="dashboard-day-number">
+        {{ $day->format('d') }}
+    </div>
+
+    <div class="dashboard-day-events">
+
+        @foreach($dayReservations->take(3) as $reservation)
+
+            <div class="dashboard-event-item">
+
+                <span class="badge badge-{{ $reservation->status }}">
+                    {{ ucfirst($reservation->status) }}
+                </span>
+
+                <div class="dashboard-event-room">
+                    {{ $reservation->room->name }}
                 </div>
-                <div class="stat-card green clickable-stat" @click="statsModal = true; statsReservations = approvedOngoingRes; statsTitle = 'Approved / Ongoing'">
-                    <h3>Approved / Ongoing</h3>
-                    <p class="stat-number">{{ Auth::user()->reservations()->whereIn('status', ['approved','ongoing'])->count() }}</p>
+
+                <div class="dashboard-event-time">
+                    {{ $reservation->time_slot }}
                 </div>
+
             </div>
+
+        @endforeach
+
+        @if($dayReservations->count() > 3)
+            <div class="dashboard-more-events">
+                +{{ $dayReservations->count() - 3 }} more
+            </div>
+        @endif
+
+    </div>
+
+</div>
+
+        @endforeach
+
+    </div>
+
+</div>
 
             <!-- Stats Popup Modal (for Pending / Approved-Ongoing) -->
             <div x-show="statsModal" class="modal-overlay" @click.self="statsModal = false">
@@ -113,13 +423,41 @@
                         <div class="table-wrapper" style="max-height: 60vh; overflow-y: auto;">
                             <table class="data-table">
                                 <thead>
-                                    <tr>
-                                        <th>Room</th><th>Date</th><th>Time Slot</th><th>Activity</th><th>Pax</th><th>Status</th>
-                                    </tr>
+    <tr>
+        <th>Room</th>
+        <th>Date</th>
+        <th>Time Slot</th>
+        <th>Activity</th>
+        <th>Pax</th>
+        <th>Status</th>
+    </tr>
+</thead>
                                 </thead>
                                 <tbody>
                                     <template x-for="res in statsReservations" :key="res.id">
-                                        <tr>
+
+<tr
+    class="clickable-row"
+    style="cursor:pointer;"
+
+    @click="
+    statsModal = false;
+
+    let targetFilter =
+        (res.status === 'approved' || res.status === 'ongoing')
+            ? 'approved_ongoing'
+            : 'pending';
+
+    window.dispatchEvent(
+        new CustomEvent('jump-to-reservation', {
+            detail: {
+                id: res.id,
+                filter: targetFilter
+            }
+        })
+    );
+"
+>
                                             <td x-text="res.room_name"></td>
                                             <td x-text="res.date"></td>
                                             <td x-text="res.time_slot"></td>
@@ -173,97 +511,273 @@
                 }
             @endphp
 
-            @if($upcoming)
-                <div class="upcoming-card" @click="upcomingModal = true; upcomingRes = {{ json_encode([
-                    'id' => $upcoming->id,
-                    'room_name' => $upcoming->room->name,
-                    'room_type' => ucfirst($upcoming->room->type),
-                    'date' => $upcoming->reservation_date->format('M d, Y'),
-                    'time_slot' => $upcoming->time_slot,
-                    'activity' => $upcoming->activity_name,
-                    'pax' => $upcoming->pax,
-                    'status' => $upcoming->status,
-                    'checked_in_at' => $upcoming->checked_in_at ? \Carbon\Carbon::parse($upcoming->checked_in_at)->format('h:i A') : null,
-                    'slot_start' => \Carbon\Carbon::parse($upcoming->reservation_date->toDateString() . ' ' . parseSlotStartTime($upcoming->time_slot), 'Asia/Manila')->format('H:i'),
-                    'slot_end' => \Carbon\Carbon::parse($upcoming->reservation_date->toDateString() . ' ' . parseSlotEndTime($upcoming->time_slot), 'Asia/Manila')->format('H:i'),
-                ]) }}">
-                    <h4 class="upcoming-title">
-                        @if($upcoming->checked_in_at)
-                            🟢 Your Ongoing Reservation
-                        @else
-                             Your Upcoming Reservation
-                        @endif
-                    </h4>
-                    <div class="upcoming-minimal">
-                        <span class="upcoming-date-small">{{ $upcoming->reservation_date->format('M d, Y') }}</span>
-                        <span class="upcoming-slot-small">{{ $upcoming->time_slot }}</span>
-                        <span class="upcoming-arrow">→</span>
-                    </div>
-                    @if($upcoming->checked_in_at && $slotEndCarbon)
-                        <div class="ongoing-timer" x-data="{ remaining: '' }" x-init="
-                            const endTime = new Date('{{ $slotEndCarbon->toDateTimeString() }}').getTime();
-                            const update = () => {
-                                const now = new Date().getTime();
-                                const diff = endTime - now;
-                                if (diff <= 0) { remaining = 'Time up'; return; }
-                                const hours = Math.floor(diff / 3600000);
-                                const minutes = Math.floor((diff % 3600000) / 60000);
-                                remaining = hours + 'h ' + minutes + 'm remaining';
-                            };
-                            update();
-                            setInterval(update, 1000);
-                        ">
-                            <span class="big-timer" x-text="remaining"></span>
-                        </div>
-                    @endif
-                    <div class="upcoming-click-hint">Tap for details & check‑in</div>
+           @if($upcoming)
+
+<div id="reservation-showcase"
+     class="reservation-showcase"
+     x-data="{ expandedUpcoming: false }">
+
+    {{-- UPCOMING RESERVATION --}}
+    @if(!$upcoming->checked_in_at)
+
+    <div class="reservation-mini-bar"
+         @click="expandedUpcoming = !expandedUpcoming">
+
+        <div class="mini-left">
+
+            <div class="mini-icon">
+                ❗
+            </div>
+
+            <div>
+                <div class="mini-title">
+                    Your Upcoming Reservation
                 </div>
 
-                <!-- Check‑in Modal -->
-                <div x-show="upcomingModal" class="modal-overlay" @click.self="upcomingModal = false">
-                    <div class="modal-box modal-green" style="max-width: 500px;" @click.stop="">
-                        <div class="modal-header">
-                            <h3>📌 Reservation Details</h3>
-                            <button @click="upcomingModal = false" class="modal-close">&times;</button>
-                        </div>
-                        <template x-if="upcomingRes">
-                            <div>
-                                <p><strong>Room:</strong> <span x-text="upcomingRes.room_name"></span> (<span x-text="upcomingRes.room_type"></span>)</p>
-                                <p><strong>Date:</strong> <span x-text="upcomingRes.date"></span></p>
-                                <p><strong>Time:</strong> <span x-text="upcomingRes.time_slot"></span></p>
-                                <p><strong>Activity:</strong> <span x-text="upcomingRes.activity"></span></p>
-                                <p><strong>Pax:</strong> <span x-text="upcomingRes.pax"></span></p>
-                                <p><strong>Status:</strong> <span class="badge" :class="'badge-' + upcomingRes.status" x-text="upcomingRes.status"></span></p>
-                                <div x-show="upcomingRes.checked_in_at">
-                                    <p><strong>Checked in at:</strong> <span x-text="upcomingRes.checked_in_at"></span></p>
-                                </div>
-
-                                <!-- Mark as Arrived button -->
-                                <div class="check-in-section" x-data="{ now: new Date() }" x-init="setInterval(() => { now = new Date() }, 1000)">
-                                    <p class="check-in-hint" x-show="!upcomingRes.checked_in_at">
-                                        <span x-text="new Date() >= new Date('{{ $upcoming->reservation_date->toDateString() }}T' + upcomingRes.slot_start) ? 'You can now mark arrival' : 'Button will unlock at ' + upcomingRes.slot_start"></span>
-                                    </p>
-                                    <form :action="'/professor/reservations/' + upcomingRes.id + '/check-in'" method="POST" @submit="upcomingModal = false">
-                                        @csrf
-                                        <button type="submit" class="btn btn-check-in" 
-                                            :disabled="upcomingRes.checked_in_at || new Date() < new Date('{{ $upcoming->reservation_date->toDateString() }}T' + upcomingRes.slot_start)">
-                                            <span x-text="upcomingRes.checked_in_at ? 'Already Arrived' : '✅ Mark as Arrived'"></span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
+                <div class="mini-sub">
+                    Click for details
                 </div>
-            @endif
+            </div>
+
+        </div>
+
+        <div class="mini-arrow"
+             x-text="expandedUpcoming ? '▲' : '▼'">
+        </div>
+
+    </div>
+
+    {{-- EXPANDED UPCOMING CARD --}}
+    <div x-show="expandedUpcoming"
+         x-transition
+         class="reservation-expanded-card">
+
+        <!-- LEFT SIDE -->
+        <div class="expanded-left">
+
+            <div class="expanded-room-icon">
+                
+            </div>
+
+            <h2>
+                {{ $upcoming->room->name }}
+            </h2>
+
+            <p>
+                {{ $upcoming->activity_name }}
+            </p>
+
+            <div class="expanded-status-pill">
+                Upcoming
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="expanded-right">
+
+            <div class="expanded-grid">
+
+                <div class="expanded-item">
+                    <span>Date</span>
+                    <strong>
+                        {{ $upcoming->reservation_date->format('M d, Y') }}
+                    </strong>
+                </div>
+
+                <div class="expanded-item">
+                    <span>Time Slot</span>
+                    <strong>
+                        {{ $upcoming->time_slot }}
+                    </strong>
+                </div>
+
+                <div class="expanded-item">
+                    <span>Room Type</span>
+                    <strong>
+                        {{ ucfirst($upcoming->room->type) }}
+                    </strong>
+                </div>
+
+                <div class="expanded-item">
+                    <span>Pax</span>
+                    <strong>
+                        {{ $upcoming->pax }}
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="expanded-warning">
+                ⏳ You can only mark as arrived once your reservation time starts.
+            </div>
+
+            <form action="/professor/reservations/{{ $upcoming->id }}/check-in"
+                  method="POST">
+
+                @csrf
+
+                <button type="submit"
+                        class="expanded-arrive-btn"
+                        {{ now()->lt(
+                            \Carbon\Carbon::parse(
+                                $upcoming->reservation_date->toDateString() . ' ' .
+                                parseSlotStartTime($upcoming->time_slot),
+                                'Asia/Manila'
+                            )
+                        ) ? 'disabled' : '' }}>
+
+                    ✅ Mark Arrived
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    @else
+
+    {{-- ONGOING RESERVATION FULL WIDTH --}}
+    <div class="ongoing-full-card">
+
+        <!-- LEFT TIMER -->
+        <div class="ongoing-left">
+
+            <div class="ongoing-label">
+                🟢 Your Ongoing Reservation
+            </div>
+
+            <div class="ongoing-circle"
+                 x-data="{ remaining: '' }"
+                 x-init="
+                    const endTime = new Date('{{ $slotEndCarbon->toDateTimeString() }}').getTime();
+
+                    const update = () => {
+
+                        const now = new Date().getTime();
+
+                        const diff = endTime - now;
+
+                        if(diff <= 0) {
+                            remaining = 'Done';
+                            return;
+                        }
+
+                        const hours = Math.floor(diff / 3600000);
+
+                        const minutes = Math.floor((diff % 3600000) / 60000);
+
+                        const seconds = Math.floor((diff % 60000) / 1000);
+
+                        remaining =
+                            hours + ':' +
+                            minutes.toString().padStart(2,'0') + ':' +
+                            seconds.toString().padStart(2,'0');
+                    };
+
+                    update();
+
+                    setInterval(update, 1000);
+                 ">
+
+                <div class="ongoing-timer-text"
+                     x-text="remaining">
+                </div>
+
+                <div class="ongoing-small-text">
+                    Remaining Time
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT DETAILS -->
+        <div class="ongoing-right">
+
+            <div class="ongoing-grid">
+
+                <div class="ongoing-item">
+                    <span>Room</span>
+                    <strong>{{ $upcoming->room->name }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Time Slot</span>
+                    <strong>{{ $upcoming->time_slot }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Activity</span>
+                    <strong>{{ $upcoming->activity_name }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Room Type</span>
+                    <strong>{{ ucfirst($upcoming->room->type) }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Date</span>
+                    <strong>{{ $upcoming->reservation_date->format('M d, Y') }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Pax</span>
+                    <strong>{{ $upcoming->pax }}</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    @endif
+
+</div>
+
+@endif
         </div>
 
                 <!-- My Reservations Tab -->
-        <div x-show="activeTab === 'reservations'" x-data="{
+        <div
+x-show="activeTab === 'reservations'"
+
+@jump-to-reservation.window="
+    activeTab = 'reservations';
+
+    filter = $event.detail.filter;
+
+    selectedReservationId = $event.detail.id;
+
+    setTimeout(() => {
+
+        const row =
+            document.getElementById(
+                'reservation-row-' + $event.detail.id
+            );
+
+        if(row){
+
+            row.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+        }
+
+    }, 350);
+"
+
+x-data="{
             filter: 'all',
             showFilters: false,
             showResModal: false,
             selectedReservation: null,
+selectedReservationId: null,
             hiddenIds: [],
             reservations: {{ json_encode(
                 Auth::user()->reservations()
@@ -337,7 +851,21 @@
                         </thead>
                         <tbody>
                             <template x-for="res in filteredReservations" :key="res.id">
-                                <tr @click="selectedReservation = res; showResModal = true" class="clickable-row">
+                                <tr
+    :id="'reservation-row-' + res.id"
+
+    @click="
+        selectedReservation = res;
+        showResModal = true;
+    "
+
+    class="clickable-row"
+
+    :class="{
+        'highlighted-reservation':
+            selectedReservationId === res.id
+    }"
+>
                                     <td x-text="res.room_name"></td>
                                     <td x-text="res.date"></td>
                                     <td x-text="res.time_slot"></td>
@@ -436,30 +964,16 @@
             </div>
         </div>
 
-               <!-- Book Reservation Tab -->
-        <div x-show="activeTab === 'book'">
-            <div class="card">
-                <h2 class="card-header">Book a Reservation</h2>
-                <p style="color:var(--prof-muted); margin-bottom:1.5rem;">Start by selecting a date.</p>
-                <button @click="openBookingModal" class="btn btn-success">+ Start Booking</button>
+                                                            <!-- Book Reservation Tab -->
+<div x-show="activeTab === 'book'">
+    <div class="card">
+        <h2 class="card-header">Book a Reservation</h2>
+        <p style="color:var(--prof-muted); margin-bottom:1.5rem;">Start by selecting a date.</p>
+        <button @click="openBookingModal" class="btn btn-success">+ Start Booking</button>
+    </div>
+</div>
 
-                @php
-                    $lastRes = Auth::user()->reservations()->latest()->first();
-                @endphp
-
-                @if($lastRes)
-                    <div class="recent-reservation-preview">
-                        <h4>📋 Your Last Reservation</h4>
-                        <p><strong>Room:</strong> {{ $lastRes->room->name }}</p>
-                        <p><strong>Date:</strong> {{ $lastRes->reservation_date->format('M d, Y') }}</p>
-                        <p><strong>Time:</strong> {{ $lastRes->time_slot }}</p>
-                        <p><strong>Status:</strong>
-                            <span class="badge badge-{{ $lastRes->status }}">{{ ucfirst($lastRes->status) }}</span>
-                        </p>
-                    </div>
-                @endif
-            </div>
-        </div>
+            
 
                                 <!-- Profile Tab -->
         <div x-show="activeTab === 'profile'">
@@ -480,13 +994,7 @@
                         <label>Role</label>
                         <div class="field-value">{{ ucfirst(Auth::user()->role) }}</div>
                     </div>
-                    <div class="profile-field">
-                        <label>Personal Email</label>
-                        <div class="field-value">
-                            <span x-text="showPersonalEmail ? '{{ Auth::user()->personal_email }}' : '{{ substr(Auth::user()->personal_email, 0, 3) }}****@****.com'"></span>
-                            <button @click="showPersonalEmail = !showPersonalEmail" class="toggle-view" x-text="showPersonalEmail ? 'Hide' : 'Show'"></button>
-                        </div>
-                    </div>
+                    
                     <div class="profile-field">
                         <label>Institutional Email</label>
                         <div class="field-value">
@@ -495,6 +1003,8 @@
                         </div>
                     </div>
                 </div>
+
+                
 
                 <!-- Right: Reservation Mini Card -->
                 @php
@@ -517,58 +1027,252 @@
                 @endphp
 
                 @if($profileReservation)
-                    <div class="card card-gold profile-reservation-card" style="flex: 1; min-width: 280px; color: #fff;">
-                        <h2 class="card-header" style="color: #fff;">
-                            {{ $profileReservation->status === 'ongoing' ? '🟢 Ongoing Reservation' : '📅 Upcoming Reservation' }}
-                        </h2>
-                        <p><strong>Room:</strong> {{ $profileReservation->room->name }}</p>
-                        <p><strong>Time Slot:</strong> {{ $profileReservation->time_slot }}</p>
-                        <p><strong>Activity:</strong> {{ $profileReservation->activity_name }}</p>
-                        <p><strong>Status:</strong> {{ ucfirst($profileReservation->status) }}</p>
-                        @if($profileReservation->checked_in_at)
-                            <p><strong>Arrived at:</strong> {{ \Carbon\Carbon::parse($profileReservation->checked_in_at)->format('h:i A') }}</p>
-                        @endif
 
-                        {{-- Timer only when the reservation is actually ongoing --}}
-                        @if($profileReservation->status === 'ongoing' && $profileSlotEnd)
-                            <div class="ongoing-timer" x-data="{ remaining: '' }" x-init="
-                                const endTime = new Date('{{ $profileSlotEnd->toDateTimeString() }}').getTime();
-                                const update = () => {
-                                    const now = new Date().getTime();
-                                    const diff = endTime - now;
-                                    if (diff <= 0) { remaining = 'Time up'; return; }
-                                    const hours = Math.floor(diff / 3600000);
-                                    const minutes = Math.floor((diff % 3600000) / 60000);
-                                    remaining = hours + 'h ' + minutes + 'm';
-                                };
-                                update();
-                                setInterval(update, 1000);
-                            ">
-                                <span class="big-timer" x-text="remaining"></span>
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="card" style="flex: 1; min-width: 280px; background: #f8fafc;">
-                        <h2 class="card-header">📅 No Ongoing Reservation</h2>
-                        <p style="color: var(--prof-muted);">You have no active reservation at the moment.</p>
-                    </div>
-                @endif
+<div class="profile-ongoing-wrapper">
+
+    <div class="ongoing-full-card profile-ongoing-card">
+
+        <!-- LEFT SIDE -->
+
+        <div class="ongoing-left">
+
+            <div class="ongoing-label">
+
+                {{ $profileReservation->status === 'ongoing'
+                    ? '🟢 Ongoing Reservation'
+                    : '📅 Upcoming Reservation' }}
+
             </div>
+
+            @if($profileReservation->status === 'ongoing' && $profileSlotEnd)
+
+                <div class="ongoing-circle"
+                     x-data="{ remaining: '' }"
+                     x-init="
+                        const endTime = new Date('{{ $profileSlotEnd->toDateTimeString() }}').getTime();
+
+                        const update = () => {
+
+                            const now = new Date().getTime();
+
+                            const diff = endTime - now;
+
+                            if(diff <= 0) {
+                                remaining = 'Done';
+                                return;
+                            }
+
+                            const hours = Math.floor(diff / 3600000);
+
+                            const minutes = Math.floor((diff % 3600000) / 60000);
+
+                            const seconds = Math.floor((diff % 60000) / 1000);
+
+                            remaining =
+                                hours + ':' +
+                                minutes.toString().padStart(2,'0') + ':' +
+                                seconds.toString().padStart(2,'0');
+                        };
+
+                        update();
+
+                        setInterval(update, 1000);
+                     ">
+
+                    <div class="ongoing-timer-text"
+                         x-text="remaining">
+                    </div>
+
+                    <div class="ongoing-small-text">
+                        Remaining Time
+                    </div>
+
+                </div>
+
+            @else
+
+                <div class="profile-upcoming-icon">
+                    📅
+                </div>
+
+            @endif
+
         </div>
+
+        <!-- RIGHT SIDE -->
+
+        <div class="ongoing-right">
+
+            <div class="ongoing-grid">
+
+                <div class="ongoing-item">
+                    <span>Room</span>
+                    <strong>{{ $profileReservation->room->name }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Time Slot</span>
+                    <strong>{{ $profileReservation->time_slot }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Activity</span>
+                    <strong>{{ $profileReservation->activity_name }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Status</span>
+                    <strong>{{ ucfirst($profileReservation->status) }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Date</span>
+                    <strong>{{ $profileReservation->reservation_date->format('M d, Y') }}</strong>
+                </div>
+
+                <div class="ongoing-item">
+                    <span>Pax</span>
+                    <strong>{{ $profileReservation->pax }}</strong>
+                </div>
+
+                @if($profileReservation->checked_in_at)
+                <div class="ongoing-item">
+                    <span>Arrived At</span>
+                    <strong>
+                        {{ \Carbon\Carbon::parse($profileReservation->checked_in_at)->format('h:i A') }}
+                    </strong>
+                </div>
+                @endif
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@else
+
+<div class="card" style="flex: 1; min-width: 280px; background: #f8fafc;">
+    <h2 class="card-header">📅 No Ongoing Reservation</h2>
+    <p style="color: var(--prof-muted);">
+        You have no active reservation at the moment.
+    </p>
+</div>
+
+@endif
+
+            </div>
+
+            <!-- MIS SUPPORT BOX -->
+
+            <div class="profile-support-box">
+
+                <div class="profile-support-icon">
+                    ?
+                </div>
+
+                <div class="profile-support-text">
+
+                    <strong>Have problems?</strong>
+
+                    <p>
+                        Contact MIS:
+                        <a href="mailto:mis@paterostechnologicalcollege.edu.ph">
+                            mis@paterostechnologicalcollege.edu.ph
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+<!-- Floating Reservation Shortcut -->
+
+@if($upcoming)
+
+<div class="floating-reservation-btn"
+     @click="
+        activeTab = 'dashboard';
+
+        setTimeout(() => {
+            document.getElementById('reservation-showcase')
+                ?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+        }, 120);
+     ">
+
+    <div class="floating-pill">
+
+        @if($upcoming->checked_in_at)
+
+            <span class="floating-status-dot ongoing"></span>
+
+            <span>Ongoing</span>
+
+        @else
+
+            <span class="floating-status-dot upcoming"></span>
+
+            <span>Upcoming</span>
+
+        @endif
+
+    </div>
+
+</div>
+
+@endif
+
+    <div class="floating-pulse"></div>
+
+    <svg width="24"
+         height="24"
+         viewBox="0 0 24 24"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+
+        <rect x="4"
+              y="5"
+              width="16"
+              height="15"
+              rx="2"
+              stroke="currentColor"
+              stroke-width="2"/>
+
+        <path d="M8 3V7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"/>
+
+        <path d="M16 3V7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"/>
+
+        <path d="M4 10H20"
+              stroke="currentColor"
+              stroke-width="2"/>
+
+    </svg>
+
+</div>
 
     <!-- Booking Modal -->
     @include('professor.partials.booking_modal')
 
-    <!-- Footer -->
-    <footer class="professor-footer">
-        Pateros Technological College &copy; {{ date('Y') }}
-    </footer>
+        
 
     <script>
     function professorApp() {
         return {
             activeTab: 'dashboard',
+            reservationsForSelectedDate: [],
             showPersonalEmail: false,
             showInstitutionalEmail: false,
             showModal: false,

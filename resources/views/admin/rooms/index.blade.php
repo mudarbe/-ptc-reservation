@@ -11,10 +11,13 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>
@@ -111,20 +114,46 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="room-actions">
-                                    <a href="{{ route('admin.rooms.show', $room->id) }}" class="view-link">View Calendar</a>
-                                    @if(($room->active_bookings_count ?? 0) > 0)
-                                        <span class="disabled-text" title="Cannot deactivate room with active bookings">Deactivate</span>
-                                    @else
-                                        <form action="{{ route('admin.rooms.toggle', $room->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="deactivate-link" style="border:none; background:none; padding:0;">
-                                                {{ $room->is_active ? 'Deactivate' : 'Activate' }}
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </td>
+
+    <div class="room-modern-actions">
+
+        <a href="{{ route('admin.rooms.show', $room->id) }}"
+           class="room-calendar-btn">
+
+             Calendar
+
+        </a>
+
+        @if(($room->active_bookings_count ?? 0) > 0)
+
+            <div class="room-disabled-pill">
+
+                Active Booking
+
+            </div>
+
+        @else
+
+            <form action="{{ route('admin.rooms.toggle', $room->id) }}"
+                  method="POST">
+
+                @csrf
+
+                <button type="submit"
+                        class="room-toggle-btn
+                        {{ $room->is_active ? 'danger' : 'success' }}">
+
+                    {{ $room->is_active ? 'Deactivate' : 'Activate' }}
+
+                </button>
+
+            </form>
+
+        @endif
+
+    </div>
+
+</td>
                         </tr>
                         @endforeach
                     </tbody>

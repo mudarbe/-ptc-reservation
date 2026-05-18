@@ -33,11 +33,7 @@
                 <input type="text" id="full_name" name="full_name"
                        value="{{ old('full_name') }}" placeholder="Enter your full name" required>
             </div>
-            <div class="input-group">
-                <label for="personal_email">Personal Email</label>
-                <input type="email" id="personal_email" name="personal_email"
-                       value="{{ old('personal_email') }}" placeholder="yourname@gmail.com" required>
-            </div>
+            
             <div class="input-group">
                 <label for="institutional_email">Institutional Email</label>
                 <input type="email" id="institutional_email" name="institutional_email"

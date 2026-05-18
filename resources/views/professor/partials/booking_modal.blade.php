@@ -35,6 +35,59 @@
         <!-- Step 2: Room Type → Room → Time Slot (all in one) -->
         <div x-show="step === 2">
             <p style="margin-bottom:1rem;">Selected Date: <strong x-text="selectedDate"></strong></p>
+            <!-- Existing reservations for selected date -->
+<div x-show="reservationsForSelectedDate.length > 0"
+     class="selected-date-reservations">
+
+    <div class="selected-date-header">
+        Your reservations on this date
+    </div>
+
+    <template x-for="item in reservationsForSelectedDate">
+
+        <div class="selected-date-item"
+
+     style="cursor:pointer;"
+
+     @click="
+        showModal = false;
+
+        let targetFilter =
+            (item.status.toLowerCase() === 'approved' ||
+             item.status.toLowerCase() === 'ongoing')
+                ? 'approved_ongoing'
+                : item.status.toLowerCase();
+
+        window.dispatchEvent(
+            new CustomEvent('jump-to-reservation', {
+                detail: {
+                    id: item.id,
+                    filter: targetFilter
+                }
+            })
+        );
+     "
+>
+
+            <div class="selected-date-top">
+                <span class="selected-room" x-text="item.room"></span>
+
+                <span class="badge badge-approved"
+                      x-text="item.status">
+                </span>
+            </div>
+
+            <div class="selected-date-sub">
+                <span x-text="item.slot"></span>
+                ·
+                <span x-text="item.activity"></span>
+            </div>
+
+        </div>
+
+    </template>
+
+</div>
 
             <!-- Choose room type -->
 <div x-show="!roomTypeSelected">

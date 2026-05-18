@@ -91,11 +91,7 @@
                     <input type="text" id="modal_full_name" name="full_name"
                            value="{{ old('full_name') }}" placeholder="Enter your full name" required>
                 </div>
-                <div class="input-group">
-                    <label for="modal_personal_email">Personal Email</label>
-                    <input type="email" id="modal_personal_email" name="personal_email"
-                           value="{{ old('personal_email') }}" placeholder="yourname@gmail.com" required>
-                </div>
+                
                 <div class="input-group">
                     <label for="modal_institutional_email">Institutional Email</label>
                     <input type="email" id="modal_institutional_email" name="institutional_email"
@@ -128,13 +124,22 @@
                 <h3>Check Request Status</h3>
                 <button class="close-btn" onclick="closeModal('statusModal')">&times;</button>
             </div>
-            <p style="color:#64748b; margin-bottom:1.5rem;">Enter the personal email you used when requesting an account.</p>
+            <p style="color:#64748b; margin-bottom:1.5rem;">
+    Enter your institutional email to check your request status.
+</p>
             <form action="{{ route('request.status.check') }}" method="POST">
                 @csrf
                 <div class="input-group">
-                    <label for="status_personal_email">Personal Email</label>
-                    <input type="email" id="status_personal_email" name="personal_email"
-                           value="{{ old('personal_email') }}" placeholder="yourname@gmail.com" required>
+                    <label for="status_institutional_email">
+    Institutional Email
+</label>
+
+<input type="email"
+       id="status_institutional_email"
+       name="institutional_email"
+       value="{{ old('institutional_email') }}"
+       placeholder="yourname@paterostechnologicalcollege.edu.ph"
+       required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top:1rem;">Check Status</button>
             </form>

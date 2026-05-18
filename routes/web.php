@@ -57,7 +57,7 @@ Route::get('/request', function () {
 Route::post('/request', function (Request $request) {
     $validated = $request->validate([
         'full_name' => 'required|string|max:255',
-        'personal_email' => 'required|email|max:255',
+        
         'institutional_email' => [
             'required',
             'email',
@@ -70,12 +70,11 @@ Route::post('/request', function (Request $request) {
     ]);
 
     AccountRequest::create([
-        'full_name' => $validated['full_name'],
-        'personal_email' => $validated['personal_email'],
-        'institutional_email' => $validated['institutional_email'],
-        'role' => 'professor',
-        'status' => 'pending',
-    ]);
+    'full_name' => $validated['full_name'],
+    'institutional_email' => $validated['institutional_email'],
+    'role' => 'professor',
+    'status' => 'pending',
+]);
 
     return redirect('/')->with('success', 'Your account request has been submitted! Please wait for admin approval.');
 })->name('request.submit');
@@ -85,14 +84,21 @@ Route::get('/status', function () {
 })->name('request.status');
 
 Route::post('/status', function (Request $request) {
+
     $request->validate([
-        'personal_email' => 'required|email',
+        'institutional_email' => 'required|email',
     ]);
 
-    $accountRequest = AccountRequest::where('personal_email', $request->personal_email)->first();
+    $accountRequest = AccountRequest::where(
+        'institutional_email',
+        $request->institutional_email
+    )->first();
 
     if (!$accountRequest) {
-        return redirect('/')->with('not_found', 'No request found with that personal email.');
+        return redirect('/')->with(
+            'not_found',
+            'No request found with that institutional email.'
+        );
     }
 
     $result = [
@@ -102,6 +108,7 @@ Route::post('/status', function (Request $request) {
     ];
 
     return redirect('/')->with('status_result', $result);
+
 })->name('request.status.check');
 
 // ==================== PROTECTED ROUTES ====================
@@ -110,11 +117,29 @@ Route::middleware(['auth'])->group(function () {
 
     // Professor Dashboard
     Route::get('/professor', function () {
-        if (!Auth::user()->isProfessor()) {
-            abort(403);
-        }
-        return view('professor.dashboard');
-    })->name('professor.dashboard');
+
+    if (!Auth::user()->isProfessor()) {
+        abort(403);
+    }
+
+    $user = Auth::user();
+
+    $reservations = Reservation::where('user_id', $user->id)
+        ->with('room')
+        ->orderBy('reservation_date', 'asc')
+        ->get();
+
+    $calendarReservations = $reservations
+        ->groupBy(function ($reservation) {
+            return \Carbon\Carbon::parse($reservation->reservation_date)->format('Y-m-d');
+        });
+
+    return view('professor.dashboard', compact(
+        'reservations',
+        'calendarReservations'
+    ));
+
+})->name('professor.dashboard');
 
     // Admin Dashboard
     Route::get('/admin', function () {
@@ -144,12 +169,16 @@ Route::middleware(['auth'])->group(function () {
         }
 
         SystemUser::create([
-            'full_name'           => $accountRequest->full_name,
-            'personal_email'      => $accountRequest->personal_email,
-            'institutional_email' => $accountRequest->institutional_email,
-            'password'            => Hash::make($accountRequest->institutional_email),
-            'role'                => $accountRequest->role,
-        ]);
+    'full_name'           => $accountRequest->full_name,
+
+    'personal_email'      => $accountRequest->institutional_email,
+
+    'institutional_email' => $accountRequest->institutional_email,
+
+    'password'            => Hash::make($accountRequest->institutional_email),
+
+    'role'                => $accountRequest->role,
+]);
 
         $accountRequest->status = 'approved';
         $accountRequest->save();

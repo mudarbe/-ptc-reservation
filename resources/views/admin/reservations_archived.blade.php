@@ -9,7 +9,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body x-data="{
+    detailModal: false,
+    detailItem: null,
     activeFilter: 'all',
+selectedDate: '',
     hiddenIds: [],
     reservations: {{ json_encode(
         $reservations->map(function($r) {
@@ -18,6 +21,7 @@
                 'professor' => $r->user->full_name,
                 'room' => $r->room->name,
                 'date' => $r->reservation_date->format('M d, Y'),
+                'raw_date' => $r->reservation_date->format('Y-m-d'),
                 'time_slot' => $r->time_slot,
                 'activity' => $r->activity_name,
                 'pax' => $r->pax,
@@ -33,13 +37,35 @@
         }
         // for all other filters, exclude hidden items
         let visible = this.reservations.filter(r => !this.hiddenIds.includes(r.id));
-        if (this.activeFilter === 'all') return visible;
+        if (this.activeFilter === 'all') {
+
+    if(this.selectedDate){
+
+        return visible.filter(r =>
+            r.raw_date === this.selectedDate
+        );
+
+    }
+
+    return visible;
+}
         if (this.activeFilter === 'maintenance') {
             return visible.filter(r => {
                 return r.status === 'cancelled' && r.remarks && (r.remarks.toLowerCase().includes('maintenance') || r.remarks.toLowerCase().includes('admin use'));
             });
         }
-        return visible.filter(r => r.status === this.activeFilter);
+        let filtered =
+    visible.filter(r => r.status === this.activeFilter);
+
+if(this.selectedDate){
+
+    filtered = filtered.filter(r =>
+        r.raw_date === this.selectedDate
+    );
+
+}
+
+return filtered;
     },
     hideReservation(id) {
         if (!this.hiddenIds.includes(id)) {
@@ -53,10 +79,13 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>MIS Admin</h2>
-            <p>PTC Reservation</p>
-        </div>
+        <div class="sidebar-header" style="display:flex; align-items:center; gap:0.75rem;">
+    <img src="{{ asset('images/ptc_logo.png') }}" alt="PTC Logo" style="height: 36px; width: auto; border-radius: 8px;">
+    <div>
+        <h2>MIS Admin</h2>
+        <p>PTC Reservation</p>
+    </div>
+</div>
         <nav class="sidebar-nav">
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.account_requests') }}">Account Requests</a>
@@ -129,6 +158,28 @@
                 </button>
             </div>
 
+            <div class="archive-filter-bar">
+
+    <div class="archive-filter-left">
+
+        <label>Filter by Reservation Date</label>
+
+        <input type="date"
+               x-model="selectedDate"
+               class="archive-date-filter">
+
+    </div>
+
+    <button x-show="selectedDate"
+            @click="selectedDate = ''"
+            class="archive-clear-btn">
+
+        Clear
+
+    </button>
+
+</div>
+
             <!-- Table -->
             <div class="table-wrapper">
                 <table class="data-table">
@@ -146,7 +197,32 @@
                     </thead>
                     <tbody>
                         <template x-for="res in filteredReservations" :key="res.id">
-                            <tr>
+                            <tr
+
+@click="detailItem = {
+
+    professor: res.professor,
+
+    room: res.room,
+
+    date: res.date,
+
+    time_slot: res.time_slot,
+
+    activity: res.activity,
+
+    pax: res.pax,
+
+    status: res.status,
+
+    remarks: res.remarks
+
+};
+
+detailModal = true"
+
+class="clickable-row"
+>
                                 <td x-text="res.professor"></td>
                                 <td x-text="res.room"></td>
                                 <td x-text="res.date"></td>
@@ -193,6 +269,143 @@
             </div>
         </div>
     </div>
+
+    <!-- Archived Reservation Detail Modal -->
+
+<div x-show="detailModal"
+     class="modal-overlay"
+     @click.self="detailModal = false">
+
+    <div class="modal-box"
+         style="max-width:500px;">
+
+        <div class="modal-header">
+
+            <h3>
+                Reservation Details
+            </h3>
+
+            <button @click="detailModal = false"
+                    class="modal-close">
+
+                &times;
+
+            </button>
+
+        </div>
+
+        <template x-if="detailItem">
+
+    <div class="account-detail-modern">
+
+        <!-- TOP -->
+
+        <div class="account-detail-top">
+
+            <div class="account-avatar">
+
+                <span x-text="detailItem.professor.charAt(0).toUpperCase()"></span>
+
+            </div>
+
+            <div>
+
+                <h2 x-text="detailItem.professor"></h2>
+
+                <p>
+                    Archived Reservation
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- DETAILS -->
+
+        <div class="account-detail-grid">
+
+            <div class="account-detail-item">
+
+                <span>Room</span>
+
+                <strong x-text="detailItem.room"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Date</span>
+
+                <strong x-text="detailItem.date"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Time Slot</span>
+
+                <strong x-text="detailItem.time_slot"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Activity</span>
+
+                <strong x-text="detailItem.activity"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Pax</span>
+
+                <strong x-text="detailItem.pax"></strong>
+
+            </div>
+
+            <div class="account-detail-item">
+
+                <span>Status</span>
+
+                <div class="account-status-pill">
+
+                    <span x-text="detailItem.status"></span>
+
+                </div>
+
+            </div>
+
+            <div class="account-detail-item"
+                 x-show="detailItem.remarks">
+
+                <span>Remarks</span>
+
+                <strong x-text="detailItem.remarks"></strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
+
+        <div class="modal-actions"
+             style="margin-top:1.5rem;">
+
+            <button @click="detailModal = false"
+                    class="btn btn-outline">
+
+                Close
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 </html>

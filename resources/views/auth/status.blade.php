@@ -10,14 +10,19 @@
 <body>
     <div class="card">
         <h2>Check Request Status</h2>
-        <p class="subtitle">Enter the personal email you used when requesting an account.</p>
+        <p class="subtitle">Enter your institutional email to check your request status.</p>
 
         <form action="{{ route('request.status.check') }}" method="POST">
             @csrf
             <div class="input-group">
-                <label for="personal_email">Personal Email</label>
-                <input type="email" id="personal_email" name="personal_email"
-                       value="{{ old('personal_email') }}" placeholder="yourname@gmail.com" required>
+                <label for="institutional_email">Institutional Email</label>
+
+<input type="email"
+       id="institutional_email"
+       name="institutional_email"
+       value="{{ old('institutional_email') }}"
+       placeholder="yourname@paterostechnologicalcollege.edu.ph"
+       required>
             </div>
             <button type="submit" class="btn">Check Status</button>
         </form>
